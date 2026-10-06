@@ -33,6 +33,25 @@ const initial: State = {
 };
 
 const KEY = "applypilot-state-v1";
+
+export type Decision = "Not Decided" | "Saved" | "Passed";
+export const DECISIONS: Decision[] = ["Not Decided", "Saved", "Passed"];
+const PROCESS: AppStatus[] = ["Applied", "Interview", "Offer", "Rejected"];
+function inProcess(s: Pick<State, "applications">, jobId: string) {
+  const a = s.applications.find((x) => x.jobId === jobId);
+  return !!a && PROCESS.includes(a.status);
+}
+/** Drop Passed decisions for jobs already in the application process (application data untouched). */
+function cleanPassed(s: State): State {
+  const next = s.passedJobIds.filter((id) => !inProcess(s, id));
+  return next.length === s.passedJobIds.length ? s : { ...s, passedJobIds: next };
+}
+export function decisionFor(s: Pick<State, "applications" | "passedJobIds">, jobId: string): Decision {
+  if (inProcess(s, jobId)) return "Not Decided";
+  if (s.passedJobIds.includes(jobId)) return "Passed";
+  return s.applications.find((a) => a.jobId === jobId)?.status === "Saved" ? "Saved" : "Not Decided";
+}
+export const isInProcess = inProcess;
 let idc = 0;
 const uid = (p: string) => `${p}-${Date.now().toString(36)}-${idc++}`;
 
@@ -48,7 +67,7 @@ function useStoreValue() {
         // Migrate untouched old demo persona to the new default
         if (saved.profile.fullName === "Katherine Ma") saved.profile = { ...saved.profile, fullName: defaultProfile.fullName };
         if (saved.profile.degree === "M.S. Business Analytics, UCLA Anderson") saved.profile = { ...saved.profile, degree: defaultProfile.degree };
-        setState(saved);
+        setState(cleanPassed(saved));
       }
     } catch {}
     setHydrated(true);
@@ -58,7 +77,7 @@ function useStoreValue() {
     if (hydrated) localStorage.setItem(KEY, JSON.stringify(state));
   }, [state, hydrated]);
 
-  const update = useCallback((fn: (s: State) => State) => setState(fn), []);
+  const update = useCallback((fn: (s: State) => State) => setState((s) => cleanPassed(fn(s))), []);
 
   const actions = useMemo(
     () => ({
@@ -66,7 +85,9 @@ function useStoreValue() {
       completeOnboarding: () => update((s) => ({ ...s, onboarded: true })),
       addJob: (job: Job) => update((s) => ({ ...s, jobs: [job, ...s.jobs] })),
       passJob: (jobId: string) =>
-        update((s) => s.passedJobIds.includes(jobId) ? s : { ...s, passedJobIds: [...s.passedJobIds, jobId] }),
+        update((s) => s.passedJobIds.includes(jobId) || inProcess(s, jobId) ? s : { ...s, passedJobIds: [...s.passedJobIds, jobId] }),
+      undoPass: (jobId: string) =>
+        update((s) => ({ ...s, passedJobIds: s.passedJobIds.filter((x) => x !== jobId) })),
       toggleCompare: (id: string) =>
         update((s) => {
           if (s.compareIds.includes(id)) return { ...s, compareIds: s.compareIds.filter((x) => x !== id) };
@@ -75,7 +96,9 @@ function useStoreValue() {
         }),
       setCompare: (ids: string[]) => update((s) => ({ ...s, compareIds: ids.slice(0, 3) })),
       trackJob: (jobId: string, status: AppStatus) =>
-        update((s) => {
+        update((s0) => {
+          // Saving or applying is a new user decision: clear any Passed decision
+          const s = { ...s0, passedJobIds: s0.passedJobIds.filter((x) => x !== jobId) };
           const existing = s.applications.find((a) => a.jobId === jobId);
           if (existing) {
             if (existing.status === status) return s;
