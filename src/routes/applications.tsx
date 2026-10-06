@@ -16,7 +16,7 @@ import { useStore } from "@/lib/store";
 import { STATUSES, TODAY, fmtDate, recommendationFor, type Application, type AppStatus } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-type S = { focus?: string | undefined; app?: string };
+type S = { focus?: string | undefined; app?: string | undefined };
 
 export const Route = createFileRoute("/applications")({
   validateSearch: (s: Record<string, unknown>): S => ({

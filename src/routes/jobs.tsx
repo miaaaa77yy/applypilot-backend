@@ -24,7 +24,7 @@ import {
 } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-type S = { rec?: string | undefined; job?: string };
+type S = { rec?: string | undefined; job?: string | undefined };
 
 export const Route = createFileRoute("/jobs")({
   validateSearch: (s: Record<string, unknown>): S => ({
