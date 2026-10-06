@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Maximize2, Minimize2, Search, Bookmark, Send, Columns3 } from "lucide-react";
+import { Maximize2, Minimize2, Search, Bookmark, Send, Columns3, X, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app/AppShell";
 import { AnalysisSections, Verdict } from "@/components/app/Analysis";
@@ -86,6 +86,12 @@ function ReviewJobs() {
   const selectedId = search.job && list.some((j) => j.id === search.job) ? search.job : list[0]?.id;
   const job = s.jobs.find((j) => j.id === selectedId) ?? null;
   const app = job ? s.applications.find((a) => a.jobId === job.id) : undefined;
+  const passed = job ? s.passedJobIds.includes(job.id) : false;
+  let applicationUrl: string | null = null;
+  try {
+    const url = new URL(job?.url ?? "");
+    if (["https:", "http:"].includes(url.protocol) && !url.username && !url.password) applicationUrl = url.href;
+  } catch {}
   const select = (id: string) => navigate({ search: (p) => ({ ...p, job: id }), replace: true });
 
   const locations = [...new Set(s.jobs.map((j) => j.location))];
@@ -107,19 +113,27 @@ function ReviewJobs() {
             {job.company} · {job.location} · {fmtSalary(job.salaryMin, job.salaryMax)} · Deadline {fmtDate(job.deadline)}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            {app ? (
-              <>
-                <StatusBadge status={app.status} />
-                <Button size="sm" variant="outline" asChild><Link to="/applications" search={{ app: app.id }}>Open application</Link></Button>
-                {app.status === "Saved" && <Button size="sm" onClick={() => track("Applied")}><Send /> Mark Applied</Button>}
-              </>
+            <Button size="sm" variant="outline" aria-pressed={passed} onClick={() => {
+              s.passJob(job.id);
+              toast.success(`${job.company} recorded as passed`);
+            }}><X /> Pass</Button>
+            <Button size="sm" variant="outline" onClick={() => track("Saved")}><Bookmark /> Save for Later</Button>
+            {applicationUrl ? (
+              <Button size="sm" asChild><a href={applicationUrl} target="_blank" rel="noopener noreferrer"><ExternalLink /> Apply Now</a></Button>
             ) : (
-              <>
-                <Button size="sm" onClick={() => track("Applied")}><Send /> Mark Applied</Button>
-                <Button size="sm" variant="outline" onClick={() => track("Saved")}><Bookmark /> Save</Button>
-              </>
+              <Button size="sm" disabled aria-describedby="application-url-unavailable"><ExternalLink /> Apply Now</Button>
             )}
+            <Button size="sm" variant="outline" disabled={app?.status === "Applied"} onClick={() => track("Applied")}><Send /> Mark Applied</Button>
           </div>
+          {!applicationUrl && <p id="application-url-unavailable" className="mt-2 text-xs text-muted-foreground">Apply Now unavailable: no valid application URL for this job.</p>}
+          {(app || passed) && <div className="mt-2 flex flex-wrap items-center gap-2">
+            {passed && <span className="text-xs text-muted-foreground">Your decision: Passed</span>}
+            {app && <>
+              <StatusBadge status={app.status} />
+              <Button size="sm" variant="link" className="h-auto p-0" asChild><Link to="/applications" search={{ app: app.id }}>Open application</Link></Button>
+            </>}
+          </div>
+          }
         </div>
         <Button variant="ghost" size="icon" aria-label={expanded ? "Return to split view" : "Expand details"} onClick={() => setExpanded(!expanded)}>
           {expanded ? <Minimize2 /> : <Maximize2 />}
