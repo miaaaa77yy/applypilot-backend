@@ -406,7 +406,7 @@ export function fmtDate(d: string | null) {
 }
 
 export function fmtSalary(min: number | null, max: number | null) {
-  if (min == null && max == null) return "Salary not listed";
+  if (min == null && max == null) return "Salary Unknown";
   const k = (n: number) => `$${Math.round(n / 1000)}k`;
   if (min != null && max != null) return `${k(min)}–${k(max)}`;
   return k((min ?? max)!);
