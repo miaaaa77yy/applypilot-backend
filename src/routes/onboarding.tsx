@@ -81,6 +81,9 @@ function OnboardingInner() {
                 store.setProfile(basicsToProfile(basics));
                 setStep(1);
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "BUTTON") e.preventDefault();
+              }}
               className="space-y-6"
             >
               <div>

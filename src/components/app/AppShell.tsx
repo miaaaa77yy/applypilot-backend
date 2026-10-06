@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { LayoutDashboard, Search, Columns3, KanbanSquare, ListChecks, UserRound, Plane, RotateCcw, LogOut, ChevronsUpDown } from "lucide-react";
+import { LayoutDashboard, Search, Columns3, KanbanSquare, ListChecks, UserRound, Plane, LogOut, ChevronsUpDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   AlertDialog,
@@ -20,7 +20,6 @@ const nav = [
   { to: "/compare", label: "Compare", icon: Columns3 },
   { to: "/applications", label: "Applications", icon: KanbanSquare },
   { to: "/tasks", label: "Tasks", icon: ListChecks },
-  { to: "/profile", label: "Profile", icon: UserRound },
 ] as const;
 
 export function AppShell({ title, subtitle, actions, children }: { title: string; subtitle?: string; actions?: React.ReactNode; children: React.ReactNode }) {
@@ -77,9 +76,6 @@ export function AppShell({ title, subtitle, actions, children }: { title: string
               </button>
             </PopoverContent>
           </Popover>
-          <button onClick={reset} className="mt-2 flex items-center gap-1.5 px-2 text-xs opacity-70 hover:opacity-100">
-            <RotateCcw className="size-3" /> Reset demo
-          </button>
           <AlertDialog open={confirm} onOpenChange={setConfirm}>
             <AlertDialogContent>
               <AlertDialogHeader>
