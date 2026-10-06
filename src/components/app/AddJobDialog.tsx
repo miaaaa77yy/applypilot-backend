@@ -121,7 +121,7 @@ export function AddJobDialog({ onAdded }: { onAdded: (id: string) => void }) {
             <div className="grid gap-3 sm:grid-cols-2">
               {(["company", "title", "location", "salary"] as const).map((k) => (
                 <div key={k} className="space-y-1.5">
-                  <Label htmlFor={k}>{{ company: "Company *", title: "Job title *", location: "Location", salary: "Annual Salary Range (USD) — Optional" }[k]}</Label>
+                  <Label htmlFor={k}>{{ company: "Company *", title: "Job title *", location: "Location", salary: "Annual Salary Range (USD)" }[k]}</Label>
                   <Input id={k} maxLength={100} placeholder={k === "salary" ? "90000 or 90000-110000" : undefined} aria-invalid={k === "salary" && !!salaryError} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
                   {k === "salary" && salaryError && <p className="text-xs text-destructive">{salaryError}</p>}
                 </div>

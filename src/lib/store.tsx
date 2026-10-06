@@ -19,6 +19,7 @@ interface State {
   applications: Application[];
   tasks: Task[];
   compareIds: string[];
+  passedJobIds: string[];
 }
 
 const initial: State = {
@@ -28,6 +29,7 @@ const initial: State = {
   applications: seedApplications,
   tasks: seedTasks,
   compareIds: ["spotify-da", "adobe-pa"],
+  passedJobIds: [],
 };
 
 const KEY = "applypilot-state-v1";
@@ -63,6 +65,8 @@ function useStoreValue() {
       setProfile: (patch: Partial<Profile>) => update((s) => ({ ...s, profile: { ...s.profile, ...patch } })),
       completeOnboarding: () => update((s) => ({ ...s, onboarded: true })),
       addJob: (job: Job) => update((s) => ({ ...s, jobs: [job, ...s.jobs] })),
+      passJob: (jobId: string) =>
+        update((s) => s.passedJobIds.includes(jobId) ? s : { ...s, passedJobIds: [...s.passedJobIds, jobId] }),
       toggleCompare: (id: string) =>
         update((s) => {
           if (s.compareIds.includes(id)) return { ...s, compareIds: s.compareIds.filter((x) => x !== id) };

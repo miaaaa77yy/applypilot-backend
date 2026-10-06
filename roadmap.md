@@ -1,0 +1,3 @@
+- [x] Rename the Add Job salary label without changing optional validation.
+- [x] Add independent Pass, Save for Later, Apply Now, and Mark Applied controls.
+- [x] Verify decision persistence, URL behavior, and synchronized application counts.

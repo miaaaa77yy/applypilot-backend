@@ -12,3 +12,4 @@
 ## Architecture
 - All app data lives in one client store (src/lib/store.tsx) seeded from src/lib/data.ts and persisted to localStorage — prototype is front-end only by requirement; backend can replace the store later.
 - Recommendations are computed from job + profile (recommendationFor in data.ts), never stored — so profile edits re-rank everywhere consistently.
+- User pass decisions live separately in the shared store, never in job analysis or application stages — skipping must not overwrite recommendations or tracker status.
