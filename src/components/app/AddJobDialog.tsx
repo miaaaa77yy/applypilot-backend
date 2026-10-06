@@ -17,7 +17,7 @@ type SalaryResult = { min: number | null; max: number | null; error: string | nu
 export function parseSalary(raw: string): SalaryResult {
   const v = raw.trim().replace(/[$,\s]/g, "");
   if (!v) return { min: null, max: null, error: null };
-  if (v.includes("-") && /^-|--|-$/.test(v.replace(/[–—]/g, "-")) && /^-\d/.test(v)) return { min: null, max: null, error: "Salary can't be negative." };
+  if (/^-|-\s*-/.test(v)) return { min: null, max: null, error: "Salary can't be negative." };
   const m = v.replace(/[–—]/g, "-").match(/^(\d+)(?:-(\d+))?$/);
   if (!m) return { min: null, max: null, error: "Enter one amount (90000) or a range (90000-110000)." };
   const min = Number(m[1]);
