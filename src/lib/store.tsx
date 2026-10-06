@@ -127,7 +127,9 @@ function useStoreValue() {
 }
 
 type Store = ReturnType<typeof useStoreValue>;
-const Ctx = createContext<Store | null>(null);
+// Keep one context instance across hot reloads so provider and consumers always match
+const g = globalThis as unknown as { __applypilotCtx?: React.Context<Store | null> };
+const Ctx = (g.__applypilotCtx ??= createContext<Store | null>(null));
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const value = useStoreValue();
