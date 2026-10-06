@@ -69,7 +69,7 @@ function Applications() {
               onDragLeave={() => setOver((o) => (o === col ? null : o))}
               onDrop={() => drop(col)}
               className={cn(
-                "flex w-64 shrink-0 flex-col rounded-xl border bg-secondary/60 p-2 transition-colors",
+                "flex min-w-[200px] flex-1 flex-col rounded-xl border bg-secondary/60 p-2 transition-colors",
                 over === col && "border-teal bg-accent",
                 search.focus === col && "ring-2 ring-teal",
               )}

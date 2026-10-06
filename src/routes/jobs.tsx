@@ -47,7 +47,7 @@ function LabeledSelect({ label, value, onChange, options }: { label: string; val
     <div className="min-w-[150px] space-y-1">
       <span className="text-xs font-semibold text-muted-foreground">{label}</span>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="h-9 bg-card"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="h-9 bg-card"><SelectValue>{value === "all" ? `All ${label.toLowerCase()}s` : value}</SelectValue></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All {label.toLowerCase()}s</SelectItem>
           {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
