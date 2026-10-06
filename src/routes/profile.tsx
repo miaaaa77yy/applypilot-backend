@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell, Card } from "@/components/app/AppShell";
 import {
@@ -27,14 +27,15 @@ export const Route = createFileRoute("/profile")({
 });
 
 function ProfilePage() {
+  const { hydrated } = useStore();
+  if (!hydrated) return null;
+  return <ProfilePageInner />;
+}
+
+function ProfilePageInner() {
   const s = useStore();
   const [basics, setBasics] = useState(toBasicsDraft(s.profile));
   const [prefs, setPrefs] = useState(toPrefsDraft(s.profile));
-  useEffect(() => {
-    setBasics(toBasicsDraft(s.profile));
-    setPrefs(toPrefsDraft(s.profile));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.hydrated]);
   const errors = validateBasics(basics);
   const valid = Object.keys(errors).length === 0;
 
