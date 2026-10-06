@@ -90,6 +90,7 @@ function ReviewJobs() {
   const app = job ? s.applications.find((a) => a.jobId === job.id) : undefined;
   const passed = job ? decisionFor(s, job.id) === "Passed" : false;
   const tracked = job ? isInProcess(s, job.id) : false;
+  const saved = job ? decisionFor(s, job.id) === "Saved" : false;
   let applicationUrl: string | null = null;
   try {
     const url = new URL(job?.url ?? "");
