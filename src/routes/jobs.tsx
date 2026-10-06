@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Maximize2, Minimize2, Search, Bookmark, Send, Columns3, X, ExternalLink } from "lucide-react";
+import { Maximize2, Minimize2, Search, Bookmark, Send, Columns3, X, ExternalLink, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app/AppShell";
 import { AnalysisSections, Verdict } from "@/components/app/Analysis";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useStore } from "@/lib/store";
+import { DECISIONS, decisionFor, isInProcess, useStore } from "@/lib/store";
 import {
   CHECKS,
   RECOMMENDATIONS,
@@ -65,6 +65,7 @@ function ReviewJobs() {
   const [elig, setElig] = useState("all");
   const [loc, setLoc] = useState("all");
   const [role, setRole] = useState("all");
+  const [dec, setDec] = useState("all");
   const [expanded, setExpanded] = useState(false);
   const rec = search.rec ?? "all";
 
@@ -77,16 +78,18 @@ function ReviewJobs() {
           (rec === "all" || recommendationFor(j, s.profile) === rec) &&
           (elig === "all" || eligibilityOf(j) === elig) &&
           (loc === "all" || j.location === loc) &&
-          (role === "all" || j.title === role)
+          (role === "all" || j.title === role) &&
+          (dec === "all" || decisionFor(s, j.id) === dec)
         );
       })
       .sort((a, b) => rankScore(b, s.profile) - rankScore(a, s.profile));
-  }, [s.jobs, s.profile, q, rec, elig, loc, role]);
+  }, [s.jobs, s.profile, s.applications, s.passedJobIds, q, rec, elig, loc, role, dec]);
 
   const selectedId = search.job && list.some((j) => j.id === search.job) ? search.job : list[0]?.id;
   const job = s.jobs.find((j) => j.id === selectedId) ?? null;
   const app = job ? s.applications.find((a) => a.jobId === job.id) : undefined;
-  const passed = job ? s.passedJobIds.includes(job.id) : false;
+  const passed = job ? decisionFor(s, job.id) === "Passed" : false;
+  const tracked = job ? isInProcess(s, job.id) : false;
   let applicationUrl: string | null = null;
   try {
     const url = new URL(job?.url ?? "");
@@ -113,10 +116,17 @@ function ReviewJobs() {
             {job.company} · {job.location} · {fmtSalary(job.salaryMin, job.salaryMax)} · Deadline {fmtDate(job.deadline)}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" aria-pressed={passed} onClick={() => {
-              s.passJob(job.id);
-              toast.success(`${job.company} recorded as passed`);
-            }}><X /> Pass</Button>
+            {passed ? (
+              <Button size="sm" variant="outline" onClick={() => {
+                s.undoPass(job.id);
+                toast.success(`${job.company} pass undone`);
+              }}><Undo2 /> Undo Pass</Button>
+            ) : (
+              <Button size="sm" variant="outline" disabled={tracked} aria-describedby={tracked ? "pass-unavailable" : undefined} onClick={() => {
+                s.passJob(job.id);
+                toast.success(`${job.company} recorded as passed`);
+              }}><X /> Pass</Button>
+            )}
             <Button size="sm" variant="outline" onClick={() => track("Saved")}><Bookmark /> Save for Later</Button>
             {applicationUrl ? (
               <Button size="sm" asChild><a href={applicationUrl} target="_blank" rel="noopener noreferrer"><ExternalLink /> Apply Now</a></Button>
@@ -126,8 +136,9 @@ function ReviewJobs() {
             <Button size="sm" variant="outline" disabled={app?.status === "Applied"} onClick={() => track("Applied")}><Send /> Mark Applied</Button>
           </div>
           {!applicationUrl && <p id="application-url-unavailable" className="mt-2 text-xs text-muted-foreground">Apply Now unavailable: no valid application URL for this job.</p>}
+          {tracked && <p id="pass-unavailable" className="mt-2 text-xs text-muted-foreground">Pass unavailable: this job is already in your application tracker.</p>}
           {(app || passed) && <div className="mt-2 flex flex-wrap items-center gap-2">
-            {passed && <span className="text-xs text-muted-foreground">Your decision: Passed</span>}
+            <span className="text-xs text-muted-foreground">Your decision: {decisionFor(s, job.id)}</span>
             {app && <>
               <StatusBadge status={app.status} />
               <Button size="sm" variant="link" className="h-auto p-0" asChild><Link to="/applications" search={{ app: app.id }}>Open application</Link></Button>
@@ -171,6 +182,7 @@ function ReviewJobs() {
         <LabeledSelect label="Eligibility" value={elig} onChange={setElig} options={CHECKS} />
         <LabeledSelect label="Location" value={loc} onChange={setLoc} options={locations} />
         <LabeledSelect label="Role" value={role} onChange={setRole} options={roles} />
+        <LabeledSelect label="My Decision" value={dec} onChange={setDec} options={DECISIONS} />
       </div>
 
       {expanded ? (
