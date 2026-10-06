@@ -41,7 +41,13 @@ function useStoreValue() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setState({ ...initial, ...JSON.parse(raw) });
+      if (raw) {
+        const saved = { ...initial, ...JSON.parse(raw) } as State;
+        // Migrate untouched old demo persona to the new default
+        if (saved.profile.fullName === "Katherine Ma") saved.profile = { ...saved.profile, fullName: defaultProfile.fullName };
+        if (saved.profile.degree === "M.S. Business Analytics, UCLA Anderson") saved.profile = { ...saved.profile, degree: defaultProfile.degree };
+        setState(saved);
+      }
     } catch {}
     setHydrated(true);
   }, []);

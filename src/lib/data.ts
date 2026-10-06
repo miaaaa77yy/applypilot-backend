@@ -38,6 +38,7 @@ export const COMPANY_TYPE_OPTIONS = [
 export const WORK_AUTH_OPTIONS = [
   "U.S. Citizen",
   "Green Card Holder",
+  "F-1 Student (CPT)",
   "F-1 OPT / STEM OPT",
   "H-1B",
   "Other visa",
@@ -118,8 +119,8 @@ export const TODAY = "2026-10-06";
 
 export const defaultProfile: Profile = {
   resumeName: null,
-  fullName: "Katherine Ma",
-  degree: "M.S. Business Analytics, UCLA Anderson",
+  fullName: "Maya Chen",
+  degree: "M.S. Business Analytics, USC Marshall",
   years: 1,
   months: 6,
   minSalary: 85000,
