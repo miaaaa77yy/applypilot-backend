@@ -12,19 +12,39 @@ import type { Job } from "@/lib/data";
 
 const SKILLS = ["SQL", "Python", "Tableau", "Excel", "A/B testing", "Looker", "Stakeholder communication", "R"];
 
+type SalaryResult = { min: number | null; max: number | null; error: string | null };
+
+export function parseSalary(raw: string): SalaryResult {
+  const v = raw.trim().replace(/[$,\s]/g, "");
+  if (!v) return { min: null, max: null, error: null };
+  if (/^-|-\s*-/.test(v)) return { min: null, max: null, error: "Salary can't be negative." };
+  const m = v.replace(/[–—]/g, "-").match(/^(\d+)(?:-(\d+))?$/);
+  if (!m) return { min: null, max: null, error: "Enter one amount (90000) or a range (90000-110000)." };
+  const min = Number(m[1]);
+  const max = m[2] != null ? Number(m[2]) : min;
+  if (min > max) return { min: null, max: null, error: "Minimum can't be higher than maximum." };
+  return { min, max, error: null };
+}
+
+const UNK = "Unknown — not enough job information";
+
 function simulate(f: { company: string; title: string; location: string; salary: string; desc: string; url: string }): Job {
   const text = f.desc.toLowerCase();
+  const hasDesc = text.trim().length > 0;
   const skills = SKILLS.filter((s) => text.includes(s.toLowerCase()));
-  const nums = f.salary.match(/\d[\d,]*/g)?.map((n) => Number(n.replace(/,/g, ""))).map((n) => (n < 1000 ? n * 1000 : n)) ?? [];
-  const noSponsor = /no (visa )?sponsorship|not sponsor/.test(text);
+  const sal = parseSalary(f.salary);
+  const noSponsor = /no (visa )?sponsorship|not sponsor|unable to sponsor/.test(text);
   const sponsor = /sponsor/.test(text) && !noSponsor;
+  const citizen = /citizen/.test(text);
+  const degree = /bachelor|master|degree|mba|ph\.?d/.test(text);
+  const years = text.match(/(\d+)\+?\s*(?:-\s*\d+\s*)?years?/);
   return {
     id: `custom-${Date.now()}`,
     company: f.company.trim(),
     title: f.title.trim(),
     location: f.location.trim() || "Unknown",
-    salaryMin: nums[0] ?? null,
-    salaryMax: nums[1] ?? nums[0] ?? null,
+    salaryMin: sal.min,
+    salaryMax: sal.max,
     companyType: "Startup",
     deadline: null,
     url: f.url || undefined,
@@ -34,25 +54,31 @@ function simulate(f: { company: string; title: string; location: string; salary:
         : sponsor
           ? { status: "Pass", note: "Sponsorship mentioned" }
           : { status: "Unknown", note: "Sponsorship not mentioned" },
-      citizenship: { status: /citizen/.test(text) ? "Fail" : "Pass", note: /citizen/.test(text) ? "Citizenship mentioned" : "No citizenship requirement found" },
-      experience: { status: "Unknown", note: "Experience requirement unclear" },
-      education: { status: "Pass", note: "Your degree meets typical requirements" },
+      citizenship: citizen
+        ? { status: "Unknown", note: "Citizenship mentioned — verify requirement" }
+        : { status: "Unknown", note: hasDesc ? "No citizenship requirement found — verify" : "No job description provided" },
+      experience: years
+        ? { status: "Unknown", note: `Posting mentions ${years[0]} — verify against your experience` }
+        : { status: "Unknown", note: "Experience requirement not stated" },
+      education: degree
+        ? { status: "Unknown", note: "Degree requirement mentioned — verify" }
+        : { status: "Unknown", note: "Education requirement not stated" },
     },
     fit: {
-      score: Math.min(90, 68 + skills.length * 5),
-      skills: skills.length ? skills : ["SQL", "Excel"],
-      experience: "Analytics internship and graduate coursework",
-      strongest: skills[0] ? `${skills[0]} experience` : "General analytics foundation",
-      gap: "Domain-specific experience not confirmed",
+      score: skills.length ? Math.min(90, 60 + skills.length * 6) : 50,
+      skills,
+      experience: UNK,
+      strongest: skills[0] ? `${skills[0]} (mentioned in posting)` : UNK,
+      gap: UNK,
     },
     quality: {
       roleClarity: f.desc.length > 200 ? "Medium" : "Unknown",
       learning: "Unknown",
-      compensation: nums.length ? ((nums[nums.length - 1] ?? 0) >= 100000 ? "High" : "Medium") : "Unknown",
+      compensation: sal.max == null ? "Unknown" : sal.max >= 100000 ? "High" : "Medium",
       attractiveness: "Unknown",
     },
-    explanation: "Simulated analysis based on the details you entered. Some items are Unknown because the posting didn’t say.",
-    whyFits: skills.length ? `Posting mentions skills you have: ${skills.slice(0, 3).join(", ")}.` : "Analyst role aligned with your background.",
+    explanation: "Simulated analysis based only on the details you entered. Items marked Unknown weren't stated in the posting.",
+    whyFits: skills.length ? `Posting mentions skills you have: ${skills.slice(0, 3).join(", ")}.` : "Not enough job information to assess fit.",
     concern: "Several details are missing — verify with the recruiter.",
   };
 }
@@ -63,7 +89,8 @@ export function AddJobDialog({ onAdded }: { onAdded: (id: string) => void }) {
   const [f, setF] = useState({ desc: "", url: "", company: "", title: "", location: "", salary: "" });
   const [phase, setPhase] = useState<"form" | "loading" | "result">("form");
   const [job, setJob] = useState<Job | null>(null);
-  const valid = f.company.trim() && f.title.trim();
+  const salaryError = parseSalary(f.salary).error;
+  const valid = f.company.trim() && f.title.trim() && !salaryError;
 
   const reset = () => {
     setF({ desc: "", url: "", company: "", title: "", location: "", salary: "" });
@@ -94,8 +121,9 @@ export function AddJobDialog({ onAdded }: { onAdded: (id: string) => void }) {
             <div className="grid gap-3 sm:grid-cols-2">
               {(["company", "title", "location", "salary"] as const).map((k) => (
                 <div key={k} className="space-y-1.5">
-                  <Label htmlFor={k}>{{ company: "Company *", title: "Job title *", location: "Location", salary: "Salary (e.g. 90,000–110,000)" }[k]}</Label>
-                  <Input id={k} maxLength={100} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
+                  <Label htmlFor={k}>{{ company: "Company *", title: "Job title *", location: "Location", salary: "Annual Salary Range (USD) — Optional" }[k]}</Label>
+                  <Input id={k} maxLength={100} placeholder={k === "salary" ? "90000 or 90000-110000" : undefined} aria-invalid={k === "salary" && !!salaryError} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
+                  {k === "salary" && salaryError && <p className="text-xs text-destructive">{salaryError}</p>}
                 </div>
               ))}
             </div>

@@ -1,3 +1,4 @@
+import { fmtSalary } from "@/lib/data";
 import { ShieldCheck, Sparkles, Gem, Compass } from "lucide-react";
 import { CheckBadge, LevelBadge, Pill, RecBadge } from "./badges";
 import { eligibilityOf, priorityFor, recommendationFor, type Job, type Profile } from "@/lib/data";
@@ -69,7 +70,7 @@ export function AnalysisSections({ job, profile, wide }: { job: Job; profile: Pr
         <div className="text-sm">
           <dt className="mb-1.5 text-muted-foreground">Matching skills</dt>
           <dd className="flex flex-wrap gap-1">
-            {job.fit.skills.map((s) => <Pill key={s} tone="neutral">{s}</Pill>)}
+            {job.fit.skills.length ? job.fit.skills.map((s) => <Pill key={s} tone="neutral">{s}</Pill>) : <CheckBadge status="Unknown" />}
           </dd>
         </div>
         <Stack label="Relevant experience" value={job.fit.experience} />
@@ -79,13 +80,13 @@ export function AnalysisSections({ job, profile, wide }: { job: Job; profile: Pr
       <Section icon={Gem} title="3. Opportunity Quality">
         <Row label="Role clarity"><LevelBadge level={job.quality.roleClarity} /></Row>
         <Row label="Learning potential"><LevelBadge level={job.quality.learning} /></Row>
-        <Row label="Compensation"><LevelBadge level={job.quality.compensation} /></Row>
+        <Row label="Compensation" sub={fmtSalary(job.salaryMin, job.salaryMax)}><LevelBadge level={job.quality.compensation} /></Row>
         <Row label="Company attractiveness"><LevelBadge level={job.quality.attractiveness} /></Row>
       </Section>
       <Section icon={Compass} title="4. Personal Priority">
         <Row label="Preferred location" sub={job.location}><CheckBadge status={yn(pr.location)} label={pr.location ? "Match" : "No match"} /></Row>
         <Row label="Role direction" sub={job.title}><CheckBadge status={yn(pr.role)} label={pr.role ? "Match" : "No match"} /></Row>
-        <Row label="Salary preference" sub={`Min $${profile.minSalary.toLocaleString()}`}>
+        <Row label="Salary preference" sub={`Job ${fmtSalary(job.salaryMin, job.salaryMax)} · Your min $${profile.minSalary.toLocaleString()}`}>
           <CheckBadge status={yn(pr.salary)} label={pr.salary == null ? "Unknown" : pr.salary ? "Meets" : "Below"} />
         </Row>
         <Row label="Company type" sub={job.companyType}><CheckBadge status={yn(pr.companyType)} label={pr.companyType ? "Match" : "No match"} /></Row>
