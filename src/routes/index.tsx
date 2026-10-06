@@ -28,7 +28,7 @@ function Dashboard() {
 
   const jobById = (id: string | null) => s.jobs.find((j) => j.id === id);
   const applyNow = s.jobs.filter((j) => recommendationFor(j, s.profile) === "Apply Now").length;
-  const active = s.applications.filter((a) => ["Applied", "Interview", "Offer"].includes(a.status)).length;
+  const active = s.applications.filter((a) => ["Applied", "Interview"].includes(a.status)).length;
   const interviews = s.applications.filter((a) => a.status === "Interview").length;
   const openTasks = s.tasks.filter((t) => !t.done);
 

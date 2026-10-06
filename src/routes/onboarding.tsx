@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
@@ -30,6 +30,12 @@ export const Route = createFileRoute("/onboarding")({
 const steps = ["Profile & Resume", "Career Preferences", "Your Shortlist"];
 
 function Onboarding() {
+  const { hydrated } = useStore();
+  if (!hydrated) return null;
+  return <OnboardingInner />;
+}
+
+function OnboardingInner() {
   const store = useStore();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
@@ -37,13 +43,6 @@ function Onboarding() {
   const [prefs, setPrefs] = useState(toPrefsDraft(store.profile));
   const [tried, setTried] = useState(false);
 
-  useEffect(() => {
-    if (store.hydrated) {
-      setBasics(toBasicsDraft(store.profile));
-      setPrefs(toPrefsDraft(store.profile));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.hydrated]);
 
   const errors = validateBasics(basics);
   const valid = Object.keys(errors).length === 0;

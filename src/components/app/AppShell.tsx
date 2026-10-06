@@ -1,5 +1,17 @@
-import { Link } from "@tanstack/react-router";
-import { LayoutDashboard, Search, Columns3, KanbanSquare, ListChecks, UserRound, Plane, RotateCcw } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { LayoutDashboard, Search, Columns3, KanbanSquare, ListChecks, UserRound, Plane, RotateCcw, LogOut, ChevronsUpDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useStore } from "@/lib/store";
 
 const nav = [
@@ -13,6 +25,9 @@ const nav = [
 
 export function AppShell({ title, subtitle, actions, children }: { title: string; subtitle?: string; actions?: React.ReactNode; children: React.ReactNode }) {
   const { profile, reset } = useStore();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirm, setConfirm] = useState(false);
   return (
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-sidebar p-4 text-sidebar-foreground md:flex">
@@ -37,11 +52,48 @@ export function AppShell({ title, subtitle, actions, children }: { title: string
           ))}
         </nav>
         <div className="border-t border-sidebar-border pt-4">
-          <p className="px-2 text-sm font-semibold text-sidebar-accent-foreground">{profile.fullName}</p>
-          <p className="truncate px-2 text-xs">{profile.degree}</p>
-          <button onClick={reset} className="mt-3 flex items-center gap-1.5 px-2 text-xs opacity-70 hover:opacity-100">
+          <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-sidebar-accent">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-sidebar-accent-foreground">{profile.fullName}</p>
+                  <p className="truncate text-xs">{profile.degree}</p>
+                </div>
+                <ChevronsUpDown className="size-4 shrink-0 opacity-60" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="start" className="w-52 p-1">
+              <button
+                onClick={() => { setMenuOpen(false); navigate({ to: "/profile" }); }}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+              >
+                <UserRound className="size-4" /> My Profile
+              </button>
+              <button
+                onClick={() => { setMenuOpen(false); setConfirm(true); }}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-danger hover:bg-danger-soft"
+              >
+                <LogOut className="size-4" /> Log Out
+              </button>
+            </PopoverContent>
+          </Popover>
+          <button onClick={reset} className="mt-2 flex items-center gap-1.5 px-2 text-xs opacity-70 hover:opacity-100">
             <RotateCcw className="size-3" /> Reset demo
           </button>
+          <AlertDialog open={confirm} onOpenChange={setConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Log out of the demo?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This is a prototype, so logging out resets all demo changes — your profile, added jobs, applications, notes, and tasks — back to the sample data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { reset(); navigate({ to: "/onboarding" }); }}>Log out and reset</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </aside>
       <div className="min-w-0 flex-1">
