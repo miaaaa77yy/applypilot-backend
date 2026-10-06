@@ -122,21 +122,33 @@ function ReviewJobs() {
                 toast.success(`${job.company} pass undone`);
               }}><Undo2 /> Undo Pass</Button>
             ) : (
-              <Button size="sm" variant="outline" disabled={tracked} aria-describedby={tracked ? "pass-unavailable" : undefined} onClick={() => {
+              <Button size="sm" variant="outline" disabled={tracked || saved} aria-describedby={tracked || saved ? "pass-unavailable" : undefined} onClick={() => {
                 s.passJob(job.id);
                 toast.success(`${job.company} recorded as passed`);
               }}><X /> Pass</Button>
             )}
-            <Button size="sm" variant="outline" onClick={() => track("Saved")}><Bookmark /> Save for Later</Button>
+            {saved ? (
+              <Button size="sm" variant="outline" onClick={() => {
+                s.undoSave(job.id);
+                toast.success(`${job.company} save undone`);
+              }}><Undo2 /> Undo Save</Button>
+            ) : (
+              <Button size="sm" variant="outline" disabled={passed || tracked} aria-describedby={passed ? "save-unavailable" : undefined} onClick={() => {
+                s.saveJob(job.id);
+                toast.success(`${job.company} saved for later`, { action: { label: "View", onClick: () => navigate({ to: "/applications" }) } });
+              }}><Bookmark /> Save for Later</Button>
+            )}
             {applicationUrl ? (
               <Button size="sm" asChild><a href={applicationUrl} target="_blank" rel="noopener noreferrer"><ExternalLink /> Apply Now</a></Button>
             ) : (
               <Button size="sm" disabled aria-describedby="application-url-unavailable"><ExternalLink /> Apply Now</Button>
             )}
-            <Button size="sm" variant="outline" disabled={app?.status === "Applied"} onClick={() => track("Applied")}><Send /> Mark Applied</Button>
+            <Button size="sm" variant="outline" disabled={tracked} onClick={() => track("Applied")}><Send /> Mark Applied</Button>
           </div>
           {!applicationUrl && <p id="application-url-unavailable" className="mt-2 text-xs text-muted-foreground">Apply Now unavailable: no valid application URL for this job.</p>}
           {tracked && <p id="pass-unavailable" className="mt-2 text-xs text-muted-foreground">Pass unavailable: this job is already in your application tracker.</p>}
+          {saved && <p id="pass-unavailable" className="mt-2 text-xs text-muted-foreground">Pass unavailable: click Undo Save first.</p>}
+          {passed && <p id="save-unavailable" className="mt-2 text-xs text-muted-foreground">Save for Later unavailable: click Undo Pass first.</p>}
           {(app || passed) && <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">Your decision: {decisionFor(s, job.id)}</span>
             {app && <>

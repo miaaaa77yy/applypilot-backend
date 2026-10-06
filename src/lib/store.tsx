@@ -85,9 +85,24 @@ function useStoreValue() {
       completeOnboarding: () => update((s) => ({ ...s, onboarded: true })),
       addJob: (job: Job) => update((s) => ({ ...s, jobs: [job, ...s.jobs] })),
       passJob: (jobId: string) =>
-        update((s) => s.passedJobIds.includes(jobId) || inProcess(s, jobId) ? s : { ...s, passedJobIds: [...s.passedJobIds, jobId] }),
+        update((s) => s.passedJobIds.includes(jobId) || inProcess(s, jobId) || decisionFor(s, jobId) === "Saved" ? s : { ...s, passedJobIds: [...s.passedJobIds, jobId] }),
       undoPass: (jobId: string) =>
         update((s) => ({ ...s, passedJobIds: s.passedJobIds.filter((x) => x !== jobId) })),
+      // Undo Save removes only a Saved-stage card; tracked applications are never touched
+      undoSave: (jobId: string) =>
+        update((s) => ({ ...s, applications: s.applications.filter((a) => !(a.jobId === jobId && a.status === "Saved")) })),
+      saveJob: (jobId: string) =>
+        update((s) => {
+          if (decisionFor(s, jobId) === "Passed") return s;
+          const existing = s.applications.find((a) => a.jobId === jobId);
+          if (existing) return s;
+          const app: Application = {
+            id: uid("app"), jobId, status: "Saved", date: TODAY,
+            nextAction: "Decide whether to apply", notes: "",
+            timeline: [{ date: TODAY, label: "Saved job" }],
+          };
+          return { ...s, applications: [...s.applications, app] };
+        }),
       toggleCompare: (id: string) =>
         update((s) => {
           if (s.compareIds.includes(id)) return { ...s, compareIds: s.compareIds.filter((x) => x !== id) };
