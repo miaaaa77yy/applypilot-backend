@@ -13,7 +13,7 @@ const tones: Record<Tone, string> = {
   neutral: "bg-muted text-muted-foreground border-border",
 };
 
-export function Pill({ tone, children, className }: { tone: Tone; children: React.ReactNode; className?: string }) {
+export function Pill({ tone, children, className }: { tone: Tone; children: React.ReactNode; className?: string | undefined }) {
   return (
     <span
       className={cn(
@@ -34,7 +34,7 @@ export const recTone: Record<Recommendation, Tone> = {
   Pass: "danger",
 };
 
-export function RecBadge({ rec, className }: { rec: Recommendation; className?: string }) {
+export function RecBadge({ rec, className }: { rec: Recommendation; className?: string | undefined }) {
   return (
     <Pill tone={recTone[rec]} className={className}>
       {rec}

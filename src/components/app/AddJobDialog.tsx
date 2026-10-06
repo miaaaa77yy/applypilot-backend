@@ -48,7 +48,7 @@ function simulate(f: { company: string; title: string; location: string; salary:
     quality: {
       roleClarity: f.desc.length > 200 ? "Medium" : "Unknown",
       learning: "Unknown",
-      compensation: nums.length ? (nums[nums.length - 1] >= 100000 ? "High" : "Medium") : "Unknown",
+      compensation: nums.length ? ((nums[nums.length - 1] ?? 0) >= 100000 ? "High" : "Medium") : "Unknown",
       attractiveness: "Unknown",
     },
     explanation: "Simulated analysis based on the details you entered. Some items are Unknown because the posting didn’t say.",

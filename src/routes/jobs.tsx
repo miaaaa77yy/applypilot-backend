@@ -24,12 +24,12 @@ import {
 } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-type S = { rec?: string; job?: string };
+type S = { rec?: string | undefined; job?: string };
 
 export const Route = createFileRoute("/jobs")({
   validateSearch: (s: Record<string, unknown>): S => ({
-    rec: typeof s.rec === "string" ? s.rec : undefined,
-    job: typeof s.job === "string" ? s.job : undefined,
+    rec: typeof s["rec"] === "string" ? (s["rec"] as string) : undefined,
+    job: typeof s["job"] === "string" ? (s["job"] as string) : undefined,
   }),
   head: () => ({
     meta: [

@@ -16,12 +16,12 @@ import { useStore } from "@/lib/store";
 import { STATUSES, TODAY, fmtDate, recommendationFor, type Application, type AppStatus } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-type S = { focus?: string; app?: string };
+type S = { focus?: string | undefined; app?: string };
 
 export const Route = createFileRoute("/applications")({
   validateSearch: (s: Record<string, unknown>): S => ({
-    focus: typeof s.focus === "string" ? s.focus : undefined,
-    app: typeof s.app === "string" ? s.app : undefined,
+    focus: typeof s["focus"] === "string" ? (s["focus"] as string) : undefined,
+    app: typeof s["app"] === "string" ? (s["app"] as string) : undefined,
   }),
   head: () => ({
     meta: [

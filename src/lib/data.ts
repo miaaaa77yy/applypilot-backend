@@ -71,7 +71,7 @@ export interface Job {
   salaryMax: number | null;
   companyType: string;
   deadline: string | null;
-  url?: string;
+  url?: string | undefined;
   eligibility: {
     workAuth: { status: Check; note: string };
     citizenship: { status: Check; note: string };
@@ -400,7 +400,7 @@ export function rankScore(job: Job, p: Profile) {
 
 export function fmtDate(d: string | null) {
   if (!d) return "—";
-  const [y, m, day] = d.split("-").map(Number);
+  const [y = 0, m = 1, day = 1] = d.split("-").map(Number);
   return new Date(y, m - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 

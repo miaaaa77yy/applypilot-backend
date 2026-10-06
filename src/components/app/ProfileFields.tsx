@@ -152,7 +152,7 @@ export const basicsToProfile = (d: BasicsDraft) => ({
   minSalary: Number(d.minSalary),
 });
 
-function Field({ label, error, children, htmlFor }: { label: string; error?: string; children: React.ReactNode; htmlFor: string }) {
+function Field({ label, error, children, htmlFor }: { label: string; error?: string | undefined; children: React.ReactNode; htmlFor: string }) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={htmlFor}>{label}</Label>
