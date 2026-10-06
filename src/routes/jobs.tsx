@@ -143,7 +143,7 @@ function ReviewJobs() {
             ) : (
               <Button size="sm" disabled aria-describedby="application-url-unavailable"><ExternalLink /> Apply Now</Button>
             )}
-            <Button size="sm" variant="outline" disabled={tracked} onClick={() => track("Applied")}><Send /> Mark Applied</Button>
+            <Button size="sm" variant="outline" disabled={app?.status === "Applied"} onClick={() => track("Applied")}><Send /> Mark Applied</Button>
           </div>
           {!applicationUrl && <p id="application-url-unavailable" className="mt-2 text-xs text-muted-foreground">Apply Now unavailable: no valid application URL for this job.</p>}
           {tracked && <p id="pass-unavailable" className="mt-2 text-xs text-muted-foreground">Pass unavailable: this job is already in your application tracker.</p>}
